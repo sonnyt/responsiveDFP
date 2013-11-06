@@ -108,6 +108,8 @@ var responsive_googletag = function () {
 
                         var ad = adUnit.call(adSlot);
                             ad.load();
+                    } else {
+                         throw 'Ad Slot Object must must contain, `id` and `call` parameters.';
                     }
                 }
 
