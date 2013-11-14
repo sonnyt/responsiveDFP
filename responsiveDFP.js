@@ -14,7 +14,7 @@ var responsive_googletag = function () {
          */
     var adUnit = function () {
         // this Ad Unit
-        var _unit = this;
+        var unit = this;
 
         // check for object to make sure that it has required properties
         if (!('id' in unit) && !('call' in unit)) return;
