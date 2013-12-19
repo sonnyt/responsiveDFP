@@ -31,8 +31,8 @@ var responsive_googletag = responsive_googletag || {};
                  * the reason to use class names instead of "display: none;" is beacause
                  * google collapses empty ads using "display:none;" so we don't want to toggle that
                  */
-                document.write("<style>.responsvie_dfp-visible { display: block; } .responsvie_dfp-hidden { display: none; }</style>");
-                
+                document.write('<style>.responsvie_dfp-visible { display: block; } .responsvie_dfp-hidden { display: none; }</style>');
+
                 /**
                  * Listen to window resize
                  */
@@ -79,10 +79,10 @@ var responsive_googletag = responsive_googletag || {};
              * @param  {Object} adUnit ad unit that needs to be loaded
              */
             function loadAdUnit (adUnit) {
-                if (adUnit.loaded) return;
+                if (adUnit.loaded) { return; }
 
                 if (isVisible(adUnit)) {
-                    if (typeof(googletag) != 'undefined') {
+                    if (typeof(googletag) !== 'undefined') {
                         googletag.cmd.push(function() { googletag.display(adUnit.id); });
                     }
 
@@ -112,11 +112,11 @@ var responsive_googletag = responsive_googletag || {};
                 if (isVisible(adUnit)) {
                     document.getElementById(adUnit.id).className = 'responsvie_dfp-visible';
 
-                    if (visibleAdUnits.indexOf(adUnit.call) === -1) visibleAdUnits.push(adUnit.call);
+                    if (visibleAdUnits.indexOf(adUnit.call) === -1) { visibleAdUnits.push(adUnit.call); }
                 } else {
                     document.getElementById(adUnit.id).className = 'responsvie_dfp-hidden';
 
-                    if (visibleAdUnits.indexOf(adUnit.call) > -1) visibleAdUnits.splice(visibleAdUnits.indexOf(adUnit.call), 1);
+                    if (visibleAdUnits.indexOf(adUnit.call) > -1) { visibleAdUnits.splice(visibleAdUnits.indexOf(adUnit.call), 1); }
                 }
             }
 
@@ -124,12 +124,12 @@ var responsive_googletag = responsive_googletag || {};
              * Reload Ad Units based of visibility
              */
             function refreshAdUnits () {
-                if (typeof(googletag) == 'undefined') return;
+                if (typeof(googletag) === 'undefined') { return; }
                 
                 var i, len = visibleAdUnits.length;
 
                 for (i = 0; i < len; i++) {
-                    if (window[visibleAdUnits[i]]) googletag.pubads().refresh([ window[visibleAdUnits[i]] ]);
+                    if (window[visibleAdUnits[i]]) { googletag.pubads().refresh([ window[visibleAdUnits[i]] ]); }
                 }
             }
  
@@ -162,6 +162,7 @@ var responsive_googletag = responsive_googletag || {};
                         return adUnits.length;
                     }
                 },
+                // refresh ad units
                 refresh: refreshAdUnits
             };
         })();
