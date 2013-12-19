@@ -3,137 +3,167 @@
  * Author: Sonny T. <hi@sonnyt.com>, sonnyt.com
  */
 
-var responsive_googletag = function () {
-        // all ads
-    var adUnits = Array(),
-        // width of the window
-        width = window.outerWidth;
+// Initilize variables
+var responsive_googletag = responsive_googletag || {};
+    responsive_googletag.cmd = responsive_googletag.cmd || [];
+
+(function() {
+    // check if "cmd" is an array
+    if (responsive_googletag.cmd instanceof Array) {
+        // store ad units pushed into "cmd"
+        var ads = responsive_googletag.cmd;
 
         /**
-         * Main Ad Unit function that provides methods
+         * Responsive Google DFP Tag
+         * @return {Object} public functions
          */
-    var adUnit = function () {
-        // this Ad Unit
-        var _unit = this;
+        responsive_googletag = (function() {
+            var adUnits = ads, // all ad units
+                visibleAdUnits = [], // visible ad units
+                width = window.outerWidth; // current window width
 
-        // check for object to make sure that it has required properties
-        if (!('id' in unit) && !('call' in unit)) return;
+            /**
+             * Initilize required parameters auto initlize
+             */
+            (function init() {
+                /**
+                 * stylesheet that hides and displays ad units
+                 * the reason to use class names instead of "display: none;" is beacause
+                 * google collapses empty ads using "display:none;" so we don't want to toggle that
+                 */
+                document.write("<style>.responsvie_dfp-visible { display: block; } .responsvie_dfp-hidden { display: none; }</style>");
+                
+                /**
+                 * Listen to window resize
+                 */
+                window.onresize = function(event) {
+                    // get outter width of window
+                    width = event.target.outerWidth;
 
-        return {
+                    checkAds();
+
+                    return width;
+                };
+
+                // check for the first time
+                checkAds();
+
+                // IE 8 and below "indexOf()" support
+                if(!Array.prototype.indexOf) {
+                    Array.prototype.indexOf = function(needle) {
+                        for(var i = 0; i < this.length; i++) {
+                            if(this[i] === needle) {
+                                return i;
+                            }
+                        }
+                        return -1;
+                    };
+                }
+            })();
+
+            /**
+             * Check if Ad Unit should be loaded
+             */
+            function checkAds () {
+                var i, len = adUnits.length;
+
+                for (i = 0; i < len; i++) {
+                    loadAdUnit(adUnits[i]);
+
+                    toggleVisility(adUnits[i]);
+                }
+            }
+
             /**
              * Load Ad Unit
+             * @param  {Object} adUnit ad unit that needs to be loaded
              */
-            load: function () {
-                // check if ad unit is already loaded
-                if (unit.loaded) return;
+            function loadAdUnit (adUnit) {
+                if (adUnit.loaded) return;
 
-                // check if ad unit slot is visible
-                if (this.isVisibile()) {
-                    var script = document.createElement("script");
-                        script.type  = "text/javascript";
-                        script.text = 'googletag.cmd.push(function() { googletag.display("' + unit.id +'"); });';
-
-                    document.getElementById(unit.id).appendChild(script);
-
-                    // set this ad unit loaded
-                    unit.loaded = true;
-                }
-                
-                this.toggle();
-            },
-            /**
-             * Reload Ad Unit
-             */
-            reload: function () {
-                if (this.isVisibile() && window[unit.call]) {
-                    googletag.pubads().refresh([ window[unit.call] ]);
-                }
-            },
-            /**
-             * Check if Ad Unit should be visible
-             * @return {Boolean} true or false
-             */
-            isVisibile: function () {
-                var max = unit.query.max || width + 10000000;
-                var min = unit.query.min || 0;
-
-                return (width > min && width < max);
-            },
-            /**
-             * Hdie and Show Ad Unit
-             */
-            toggle: function () {
-                if (this.isVisibile()) {
-                    document.getElementById(unit.id).style.display = 'block';
-                } else {
-                    document.getElementById(unit.id).style.display = 'none';
-                }
-            }
-        }
-    };
-
-    /**
-     * On window resize load and hide/show Ad Units
-     */
-    window.onresize = function(event) {
-        width = event.target.outerWidth;
-
-        var len = adUnits.length,
-            i = 0;
-
-        while(i < len) {
-            var ad = adUnit.call(adUnits[i]);
-                ad.load();
-                ad.toggle();
-
-            i++;
-        }
-
-        return width;
-    };
-
-    // visible commands
-    return {
-        cmd: {
-            /**
-             * Replicates the array().push() method but also runs ads
-             * @return {Intiger} adUnits length
-             */
-            push: function () {
-                for(var i = 0, len = arguments.length; i < len; i++) {
-                    var adSlot = arguments[i];
-
-                    if (typeof adSlot === 'object' && 'id' in adSlot && 'call' in adSlot) {
-                        adUnits[adUnits.length] = adSlot;
-
-                        var ad = adUnit.call(adSlot);
-                            ad.load();
-                    } else {
-                         throw 'Ad Slot Object must must contain, `id` and `call` parameters.';
+                if (isVisible(adUnit)) {
+                    if (typeof(googletag) != 'undefined') {
+                        googletag.cmd.push(function() { googletag.display(adUnit.id); });
                     }
+
+                    adUnit.loaded = true;
+
+                    toggleVisility(adUnit);
                 }
-
-                return adUnits.length;
             }
-        },
-        /**
-         * Relead Ad Units based on visibility
-         */
-        reload: function () {
-            var len = adUnits.length,
-                i = 0;
 
-            while(i < len) {
-                var ad = adUnit.call(adUnits[i]);
-                    ad.reload();
+            /**
+             * Check If Ad Unit is visible
+             * @param  {Object}  adUnit ad unit to check
+             * @return {Boolean}        true or false
+             */
+            function isVisible (adUnit) {
+                var max = adUnit.query.max || width + 10000000;
+                var min = adUnit.query.min || 0;
 
-                i++;
+                return (width >= min && width <= max) ? true : false;
             }
-        },
-        /**
-         * List of all Ad Units
-         * @type {Object}
-         */
-        units: adUnits,
-    };
-}();
+
+            /**
+             * Show and hide Ad Units
+             * @param  {Object} adUnit ad unit that needs to be toggled
+             */
+            function toggleVisility (adUnit) {
+                if (isVisible(adUnit)) {
+                    document.getElementById(adUnit.id).className = 'responsvie_dfp-visible';
+
+                    if (visibleAdUnits.indexOf(adUnit.call) === -1) visibleAdUnits.push(adUnit.call);
+                } else {
+                    document.getElementById(adUnit.id).className = 'responsvie_dfp-hidden';
+
+                    if (visibleAdUnits.indexOf(adUnit.call) > -1) visibleAdUnits.splice(visibleAdUnits.indexOf(adUnit.call), 1);
+                }
+            }
+
+            /**
+             * Reload Ad Units based of visibility
+             */
+            function refreshAdUnits () {
+                if (typeof(googletag) == 'undefined') return;
+                
+                var i, len = visibleAdUnits.length;
+
+                for (i = 0; i < len; i++) {
+                    if (window[visibleAdUnits[i]]) googletag.pubads().refresh([ window[visibleAdUnits[i]] ]);
+                }
+            }
+ 
+            return {
+                // all ad units
+                units: adUnits,
+                // visible ad units
+                visible: visibleAdUnits,
+                // available commands
+                cmd: {
+                    /**
+                     * Custom "push()" that adds items ad units into array and loads them
+                     * @return {Intiger} length of array
+                     */
+                    push: function () {
+                        var i, len = arguments.length;
+
+                        for(i = 0; i < len; i++) {
+                            var adUnit = arguments[i];
+
+                            // make sure adunit is an object and has "id" and "call" properties
+                            if (typeof adUnit === 'object' && 'id' in adUnit && 'call' in adUnit) {
+                                adUnits[adUnits.length] = adUnit;
+
+                                // load ad unit
+                                loadAdUnit(adUnit);
+                            }
+                        }
+
+                        return adUnits.length;
+                    }
+                },
+                refresh: refreshAdUnits
+            };
+        })();
+    }
+})();
